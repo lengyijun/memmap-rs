@@ -8,16 +8,14 @@ repository = "https://github.com/danburkert/memmap-rs"
 documentation = "https://docs.rs/memmap"
 description = "Cross-platform Rust API for memory-mapped file IO"
 keywords = ["mmap", "memory-map", "io", "file"]
-
+#
 [badges]
 travis-ci = { repository = "danburkert/memmap-rs" }
 appveyor = { repository = "danburkert/mmap" }
 
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-
-[target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["basetsd", "handleapi", "memoryapi", "minwindef", "std", "sysinfoapi"] }
+[target.'cfg(not(target_env = "sgx"))'.dependencies]
+sgx_tstd = { version = "1.0", rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git", features=["untrusted_fs"] }
+sgx_libc = { version = "1.0", rev = "v1.1.2", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 
 [dev-dependencies]
 tempdir = "0.3"

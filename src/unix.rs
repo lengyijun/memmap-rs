@@ -1,4 +1,6 @@
-extern crate libc;
+use std::prelude::v1::*;
+extern crate sgx_tstd as std;
+extern crate sgx_libc as libc;
 
 use std::fs::File;
 use std::os::unix::io::{AsRawFd, RawFd};
@@ -46,7 +48,7 @@ impl MmapInner {
         }
 
         unsafe {
-            let ptr = libc::mmap(
+            let ptr = libc::ocall::mmap(
                 ptr::null_mut(),
                 aligned_len as libc::size_t,
                 prot,
@@ -123,7 +125,7 @@ impl MmapInner {
         let offset = offset as isize - alignment as isize;
         let len = len + alignment;
         let result =
-            unsafe { libc::msync(self.ptr.offset(offset), len as libc::size_t, libc::MS_SYNC) };
+            unsafe { libc::ocall::msync(self.ptr.offset(offset), len as libc::size_t, libc::MS_SYNC) };
         if result == 0 {
             Ok(())
         } else {
@@ -136,7 +138,7 @@ impl MmapInner {
         let aligned_offset = offset - alignment;
         let aligned_len = len + alignment;
         let result = unsafe {
-            libc::msync(
+            libc::ocall::msync(
                 self.ptr.offset(aligned_offset as isize),
                 aligned_len as libc::size_t,
                 libc::MS_ASYNC,
@@ -154,7 +156,7 @@ impl MmapInner {
             let alignment = self.ptr as usize % page_size();
             let ptr = self.ptr.offset(-(alignment as isize));
             let len = self.len + alignment;
-            if libc::mprotect(ptr, len, prot) == 0 {
+            if libc::ocall::mprotect(ptr, len, prot) == 0 {
                 Ok(())
             } else {
                 Err(io::Error::last_os_error())
@@ -195,7 +197,7 @@ impl Drop for MmapInner {
         let alignment = self.ptr as usize % page_size();
         unsafe {
             assert!(
-                libc::munmap(
+                libc::ocall::munmap(
                     self.ptr.offset(-(alignment as isize)),
                     (self.len + alignment) as libc::size_t
                 ) == 0,
@@ -210,5 +212,5 @@ unsafe impl Sync for MmapInner {}
 unsafe impl Send for MmapInner {}
 
 fn page_size() -> usize {
-    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
+    unsafe { libc::ocall::sysconf(libc::_SC_PAGESIZE) as usize }
 }
